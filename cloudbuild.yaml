@@ -1,0 +1,43 @@
+steps:
+  # Step 1: Build the Docker image
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      [
+        "build",
+        "-t",
+        "us-central1-docker.pkg.dev/crucial-nuance-480906-i2/hello-app/hello-app:${COMMIT_SHA}",
+        "./hello-app"
+      ]
+
+  # Step 2: Push the image to Artifact Registry
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      [
+        "push",
+        "us-central1-docker.pkg.dev/crucial-nuance-480906-i2/hello-app/hello-app:${COMMIT_SHA}"
+      ]
+
+  # Step 3: Deploy to Cloud Run
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: gcloud
+    args:
+      [
+        "run",
+        "deploy",
+        "hello-app",
+        "--image",
+        "us-central1-docker.pkg.dev/crucial-nuance-480906-i2/hello-app/hello-app:${COMMIT_SHA}",
+        "--region",
+        "us-central1",
+        "--platform",
+        "managed",
+        "--allow-unauthenticated",
+        "--timeout",
+        "600s"
+      ]
+
+images:
+  - "us-central1-docker.pkg.dev/crucial-nuance-480906-i2/hello-app/hello-app:${COMMIT_SHA}"
+
+options:
+  logging: CLOUD_LOGGING_ONLY
